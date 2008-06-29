@@ -24,6 +24,7 @@ Translator::Translator(QObject *parent, const QVariantList &args) : Plasma::Appl
 {
   lay = new QGraphicsLinearLayout(this);
   lay->setOrientation(Qt::Vertical);
+  setBackgroundHints(TranslucentBackground);
   setMinimumSize(350,350);
 }
 
@@ -53,9 +54,9 @@ void Translator::init()
 //        in translation() some lines next.
 
  source = new Plasma::ComboBox(this);
- source->addItem(i18n("Italian")+" (it)");
+ setLanguages(source->nativeWidget());
  destination = new Plasma::ComboBox(this);
- destination->addItem(i18n("English")+" (en)");
+ setLanguages(destination->nativeWidget());
  lay->addItem(source);
  Plasma::Label *m_label_b = new Plasma::Label(this);
  m_label_b->setText(i18n("Translation"));
@@ -72,8 +73,8 @@ void Translator::translation()
  kDebug()<<"launching";
 
  QString srcLan,destLan;
- srcLan = source->nativeWidget()->currentText().split(" ", QString::SkipEmptyParts)[1].remove("(").remove(")");
- destLan = destination->nativeWidget()->currentText().split(" ", QString::SkipEmptyParts)[1].remove("(").remove(")");
+ srcLan = source->nativeWidget()->itemData(source->nativeWidget()->currentIndex()).toString();
+ destLan = destination->nativeWidget()->itemData(destination->nativeWidget()->currentIndex()).toString();
 
  QUrl u = QUrl::fromEncoded(QString("http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q="+m_ledit->text()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
  QNetworkRequest request(u);
@@ -107,6 +108,41 @@ void Translator::setLanguages(QComboBox *combo)
    combo->addItem(i18n("Chinese"), "zh");
    combo->addItem(i18n("Chinese Simplified"), "zh-CN");
    combo->addItem(i18n("Chinese Traditional"), "zh-TW");
+   combo->addItem(i18n("Croatian"), "hr");
+   combo->addItem(i18n("Czech"), "cs");
+   combo->addItem(i18n("Danish"), "da");
+   combo->addItem(i18n("Dutch"), "nl");
+   combo->addItem(i18n("English"), "en");
+   combo->addItem(i18n("Estonian"), "et");
+   combo->addItem(i18n("Filipino"), "tl"); 
+   combo->addItem(i18n("Finnish"), "fi");
+   combo->addItem(i18n("French"), "fr");
+   combo->addItem(i18n("German"), "de");
+   combo->addItem(i18n("Greek"), "el");
+   combo->addItem(i18n("Hebrew"), "iw");
+   combo->addItem(i18n("Hindi"), "hi");
+   combo->addItem(i18n("Hungarian"), "hu");
+   combo->addItem(i18n("Indonesian"), "id");
+   combo->addItem(i18n("Italian"), "it");
+   combo->addItem(i18n("Japanese"), "ja");
+   combo->addItem(i18n("Korean"), "ko");
+   combo->addItem(i18n("Latvian"), "lv");
+   combo->addItem(i18n("Lithuanian"), "lt");
+   combo->addItem(i18n("Norwegian"), "no");
+   combo->addItem(i18n("Persian"), "fa");
+   combo->addItem(i18n("Polish"), "pl");
+   combo->addItem(i18n("Portuguese"), "pt-PT"); 
+   combo->addItem(i18n("Romanian"), "ro");
+   combo->addItem(i18n("Russian"), "ru");
+   combo->addItem(i18n("Serbian"), "sr");
+   combo->addItem(i18n("Slovak"), "sk");
+   combo->addItem(i18n("Spanish"), "es");
+   combo->addItem(i18n("Swedish"), "sv");
+   combo->addItem(i18n("Thai"), "th");
+   combo->addItem(i18n("Turkish"), "tr");
+   combo->addItem(i18n("Ukrainian"), "uk");
+   combo->addItem(i18n("Vietnamese"), "vi");
+   combo->addItem(i18n("Unknown"), QString());
 }
 
 #include "plasma-translator.moc"

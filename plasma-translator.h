@@ -15,6 +15,7 @@ namespace Plasma{
 
 class QGraphicsLinearLayout;
 class QNetworkReply;
+class QComboBox;
 
 class Translator : public Plasma::Applet
 {
