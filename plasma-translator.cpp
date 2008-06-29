@@ -8,16 +8,23 @@
 #include <QScriptValue>
 #include <QScriptEngine>
 #include <QScriptValueIterator>
+#include <QToolButton>
+#include <QGraphicsProxyWidget>
+#include <QGraphicsLinearLayout>
+
 // KDE
 #include <KLocale>
 #include <KDebug>
 #include <KComboBox>
+#include <KIcon>
 
 // Plasma
 #include <Plasma/Label>
 #include <Plasma/LineEdit>
 #include <Plasma/TextEdit>
 #include <Plasma/ComboBox>
+#include <Plasma/PushButton>
+#include <Plasma/Icon>
 
 Translator::Translator(QObject *parent, const QVariantList &args) : Plasma::Applet(parent, args),
                                                                     lay(0)
@@ -25,7 +32,7 @@ Translator::Translator(QObject *parent, const QVariantList &args) : Plasma::Appl
   lay = new QGraphicsLinearLayout(this);
   lay->setOrientation(Qt::Vertical);
   setBackgroundHints(TranslucentBackground);
-  setMinimumSize(350,350);
+  setMinimumSize(350,200);
 }
 
 Translator::~Translator()
@@ -37,35 +44,65 @@ Translator::~Translator()
 
 void Translator::init()
 {
- Plasma::Label *m_label_a = new Plasma::Label(this);
- m_label_a->setText(i18n("Put the string to translate"));
-                                                             // TODO: set label text
- lay->addItem(m_label_a);                                    // to indicate the source 
- m_ledit = new Plasma::LineEdit(this);                       // language and the destination
- connect(m_ledit, SIGNAL(returnPressed()),                   // language of translation.
-            this, SLOT(translation()));
- lay->addItem(m_ledit);        
+ 
+ //TODO: add Google logo
+ //      and use a push button
+ //      next to the translation line
+                                                           
+ //lay->addItem(m_label_a);                                    
+ m_ledit = new Plasma::LineEdit(this);                       
+ 
+ //QToolButton *go = new QToolButton();
+ //go->setAutoRaise(true);
+ //go->setIcon(KIcon("go-jump-locationbar"));
+ //go->setMinimumSize(70,70);
+ //go->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+ //QGraphicsProxyWidget *proxy = new QGraphicsProxyWidget(this);
+ //proxy->setWidget(go);
+ 
+ Plasma::Icon *go = new Plasma::Icon(this);
+ go->setIcon(KIcon("go-jump-locationbar"));
+  
 
- // TODO: use a procedure to set languages up
- //       It would be nice to do a setData
- //       for each element to allow easier
- //       language code resolution in place
- //       of a long parsing line as it happens
-//        in translation() some lines next.
+ QGraphicsLinearLayout *h_lay = new QGraphicsLinearLayout();
+ h_lay->setOrientation(Qt::Horizontal);
+ h_lay->addItem(m_ledit);
+ h_lay->addItem(go);
+
+ connect(m_ledit, SIGNAL(returnPressed()), this, SLOT(translation()));
+ connect(go, SIGNAL(clicked()), this, SLOT(translation()));
+
+
+ lay->addItem(h_lay); // Here we add    
+
+ QGraphicsLinearLayout *lay_s = new QGraphicsLinearLayout();
+ lay_s->setOrientation(Qt::Horizontal);
+
+ Plasma::Label *m_label_a = new Plasma::Label(this);
+ m_label_a->setText(i18n("From:"));
+ lay_s->addItem(m_label_a);
 
  source = new Plasma::ComboBox(this);
  setLanguages(source->nativeWidget());
+ lay_s->addItem(source);
+ lay->addItem(lay_s);
+
+ QGraphicsLinearLayout *lay_t = new QGraphicsLinearLayout();
+ lay_t->setOrientation(Qt::Horizontal);
+ 
+ Plasma::Label *m_label_b = new Plasma::Label(this);
+ m_label_b->setText(i18n("To:"));
+ lay_t->addItem(m_label_b);
  destination = new Plasma::ComboBox(this);
  setLanguages(destination->nativeWidget());
- lay->addItem(source);
- Plasma::Label *m_label_b = new Plasma::Label(this);
- m_label_b->setText(i18n("Translation"));
- lay->addItem(m_label_b);
+ lay_t->addItem(destination);
+
+ 
 
  m_tedit = new Plasma::TextEdit(this);
  lay->addItem(m_tedit);
- lay->addItem(destination);
 
+ lay->addItem(lay_t);
 }
 
 void Translator::translation()
@@ -76,7 +113,8 @@ void Translator::translation()
  srcLan = source->nativeWidget()->itemData(source->nativeWidget()->currentIndex()).toString();
  destLan = destination->nativeWidget()->itemData(destination->nativeWidget()->currentIndex()).toString();
 
- QUrl u = QUrl::fromEncoded(QString("http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q="+m_ledit->text()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
+ QUrl u = QUrl::fromEncoded(QString("http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q="+
+                            m_ledit->text()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
  QNetworkRequest request(u);
  kDebug()<<request.url();
  QNetworkAccessManager *manager = new QNetworkAccessManager(this);
