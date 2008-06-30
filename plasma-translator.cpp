@@ -17,13 +17,12 @@
 #include <KDebug>
 #include <KComboBox>
 #include <KIcon>
+#include <KTextEdit>
 
 // Plasma
 #include <Plasma/Label>
-#include <Plasma/LineEdit>
 #include <Plasma/TextEdit>
 #include <Plasma/ComboBox>
-#include <Plasma/PushButton>
 #include <Plasma/Icon>
 
 Translator::Translator(QObject *parent, const QVariantList &args) : Plasma::Applet(parent, args),
@@ -31,8 +30,8 @@ Translator::Translator(QObject *parent, const QVariantList &args) : Plasma::Appl
 {
   lay = new QGraphicsLinearLayout(this);
   lay->setOrientation(Qt::Vertical);
-  setBackgroundHints(TranslucentBackground);
-  setMinimumSize(350,200);
+  setBackgroundHints(DefaultBackground);
+  setMinimumSize(350,300);
 }
 
 Translator::~Translator()
@@ -46,23 +45,14 @@ void Translator::init()
 {
  
  //TODO: add Google logo
- //      and use a push button
- //      next to the translation line
-                                                           
- //lay->addItem(m_label_a);                                    
- m_ledit = new Plasma::LineEdit(this);                       
- 
- //QToolButton *go = new QToolButton();
- //go->setAutoRaise(true);
- //go->setIcon(KIcon("go-jump-locationbar"));
- //go->setMinimumSize(70,70);
- //go->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
- //QGraphicsProxyWidget *proxy = new QGraphicsProxyWidget(this);
- //proxy->setWidget(go);
- 
+                                   
+ m_ledit = new Plasma::TextEdit(this);                       
+ m_ledit->nativeWidget()->setAcceptRichText(false);
+ m_ledit->nativeWidget()->setAutoFormatting(QTextEdit::AutoNone);
+
  Plasma::Icon *go = new Plasma::Icon(this);
  go->setIcon(KIcon("go-jump-locationbar"));
-  
+ go->setDrawBackground(true);
 
  QGraphicsLinearLayout *h_lay = new QGraphicsLinearLayout();
  h_lay->setOrientation(Qt::Horizontal);
@@ -71,9 +61,6 @@ void Translator::init()
 
  connect(m_ledit, SIGNAL(returnPressed()), this, SLOT(translation()));
  connect(go, SIGNAL(clicked()), this, SLOT(translation()));
-
-
- lay->addItem(h_lay); // Here we add    
 
  QGraphicsLinearLayout *lay_s = new QGraphicsLinearLayout();
  lay_s->setOrientation(Qt::Horizontal);
@@ -84,8 +71,11 @@ void Translator::init()
 
  source = new Plasma::ComboBox(this);
  setLanguages(source->nativeWidget());
+ source->nativeWidget()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
  lay_s->addItem(source);
- lay->addItem(lay_s);
+ lay->addItem(lay_s); // Here we add the source ComboBox
+ lay->addItem(h_lay); // Here we add the source TextEdit
 
  QGraphicsLinearLayout *lay_t = new QGraphicsLinearLayout();
  lay_t->setOrientation(Qt::Horizontal);
@@ -93,28 +83,31 @@ void Translator::init()
  Plasma::Label *m_label_b = new Plasma::Label(this);
  m_label_b->setText(i18n("To:"));
  lay_t->addItem(m_label_b);
+
  destination = new Plasma::ComboBox(this);
  setLanguages(destination->nativeWidget());
+ destination->nativeWidget()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
  lay_t->addItem(destination);
 
  
 
  m_tedit = new Plasma::TextEdit(this);
- lay->addItem(m_tedit);
+ lay->addItem(lay_t);  //here we add the destination ComboBox
+ lay->addItem(m_tedit);  //here we add the destination textEdit
 
- lay->addItem(lay_t);
+  setCurrentLanguage();
 }
 
 void Translator::translation()
 {
- kDebug()<<"launching";
 
  QString srcLan,destLan;
  srcLan = source->nativeWidget()->itemData(source->nativeWidget()->currentIndex()).toString();
  destLan = destination->nativeWidget()->itemData(destination->nativeWidget()->currentIndex()).toString();
 
+
  QUrl u = QUrl::fromEncoded(QString("http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q="+
-                            m_ledit->text()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
+                            m_ledit->nativeWidget()->toPlainText()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
  QNetworkRequest request(u);
  kDebug()<<request.url();
  QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -181,6 +174,19 @@ void Translator::setLanguages(QComboBox *combo)
    combo->addItem(i18n("Ukrainian"), "uk");
    combo->addItem(i18n("Vietnamese"), "vi");
    combo->addItem(i18n("Unknown"), QString());
+}
+
+void Translator::setCurrentLanguage()
+{
+ for(int i=0; i<destination->nativeWidget()->count(); i++){
+  kDebug() << destination->nativeWidget()->itemData(i).toString();
+  kDebug() << KLocale::defaultLanguage();
+  if(KLocale::defaultLanguage().contains( destination->nativeWidget()->itemData(i).toString(), Qt::CaseInsensitive )
+     && !destination->nativeWidget()->itemData(i).toString().isEmpty() )
+
+    destination->nativeWidget()->setCurrentIndex(i);
+    //break;
+ }
 }
 
 #include "plasma-translator.moc"

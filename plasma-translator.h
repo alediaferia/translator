@@ -8,7 +8,6 @@
 
 namespace Plasma{
  class Label;
- class LineEdit;
  class TextEdit;
  class ComboBox;
 }
@@ -28,7 +27,7 @@ class Translator : public Plasma::Applet
 
     private:
       QGraphicsLinearLayout *lay;
-      Plasma::LineEdit *m_ledit;
+      Plasma::TextEdit *m_ledit;
       Plasma::TextEdit *m_tedit;
       QNetworkReply *reply;
       Plasma::ComboBox *source;
@@ -40,6 +39,7 @@ class Translator : public Plasma::Applet
       virtual void getTranslation();
     protected:
               void setLanguages(QComboBox*);
+              void setCurrentLanguage();
       
 };
 K_EXPORT_PLASMA_APPLET(translator, Translator)
