@@ -42,5 +42,25 @@ class Translator : public Plasma::Applet
               void setCurrentLanguage();
       
 };
+
+// Since we use a KTextEdit even for the source string
+// seems useful to have Enter button's default behavior
+// to launch the translation instead of make a new line 
+// in the editor. To achieve this we use an event filter
+// which allows new line only if Enter is pressed with 
+// Shift modifier. Otherwise Enter starts translation.
+
+class enterButtonFilter : public QObject
+{
+  Q_OBJECT
+   public:
+    enterButtonFilter(){}
+   
+   protected:
+    bool eventFilter(QObject *obj, QEvent *ev);
+
+   signals:
+    void enterPressed();
+};
 K_EXPORT_PLASMA_APPLET(translator, Translator)
 #endif 

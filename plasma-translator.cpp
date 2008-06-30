@@ -8,9 +8,9 @@
 #include <QScriptValue>
 #include <QScriptEngine>
 #include <QScriptValueIterator>
-#include <QToolButton>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsLinearLayout>
+#include <QLabel>
 
 // KDE
 #include <KLocale>
@@ -44,11 +44,13 @@ Translator::~Translator()
 void Translator::init()
 {
  
- //TODO: add Google logo
+ //TODO: add "powered by Google" label
                                    
  m_ledit = new Plasma::TextEdit(this);                       
  m_ledit->nativeWidget()->setAcceptRichText(false);
  m_ledit->nativeWidget()->setAutoFormatting(QTextEdit::AutoNone);
+ enterButtonFilter *filter = new enterButtonFilter();
+ m_ledit->installEventFilter(filter); 
 
  Plasma::Icon *go = new Plasma::Icon(this);
  go->setIcon(KIcon("go-jump-locationbar"));
@@ -59,7 +61,7 @@ void Translator::init()
  h_lay->addItem(m_ledit);
  h_lay->addItem(go);
 
- connect(m_ledit, SIGNAL(returnPressed()), this, SLOT(translation()));
+ connect(filter, SIGNAL(enterPressed()), this, SLOT(translation()));
  connect(go, SIGNAL(clicked()), this, SLOT(translation()));
 
  QGraphicsLinearLayout *lay_s = new QGraphicsLinearLayout();
@@ -94,8 +96,13 @@ void Translator::init()
  m_tedit = new Plasma::TextEdit(this);
  lay->addItem(lay_t);  //here we add the destination ComboBox
  lay->addItem(m_tedit);  //here we add the destination textEdit
+ 
+ Plasma::Label *credits = new Plasma::Label(this);
+ credits->setText("powered by Google");
+ credits->nativeWidget()->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+ lay->addItem(credits);
 
-  setCurrentLanguage();
+ setCurrentLanguage();
 }
 
 void Translator::translation()
@@ -105,6 +112,12 @@ void Translator::translation()
  srcLan = source->nativeWidget()->itemData(source->nativeWidget()->currentIndex()).toString();
  destLan = destination->nativeWidget()->itemData(destination->nativeWidget()->currentIndex()).toString();
 
+ // Google denies more than 500 char long strings.
+
+ if(m_ledit->nativeWidget()->toPlainText().length() >= 500){
+  m_tedit->setText(i18n("Translation query string too long"));
+  return;
+ }
 
  QUrl u = QUrl::fromEncoded(QString("http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q="+
                             m_ledit->nativeWidget()->toPlainText()+"&langpair="+srcLan+"%7C"+destLan).toUtf8());
@@ -123,11 +136,9 @@ void Translator::gotError(int , const QString& err, const QVariant& op)
 
 void Translator::getTranslation()
 {
-
   QScriptValue value;
   QScriptEngine engine;
   value = engine.evaluate(reply->readAll());
-
   m_tedit->setText(value.property("responseData").property("translatedText").toString());
 }
 
@@ -187,6 +198,25 @@ void Translator::setCurrentLanguage()
     destination->nativeWidget()->setCurrentIndex(i);
     //break;
  }
+}
+
+/*
+ * Here we define eventFilter's behavior to allow translation at Enter press
+ */
+
+bool enterButtonFilter::eventFilter(QObject *, QEvent *event)
+{
+  if(event->type() == QEvent::KeyPress){
+   QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+   if(  (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) && keyEvent->modifiers() != Qt::ShiftModifier){
+    emit enterPressed();
+    return true;
+   }else{
+    return false;
+   }
+  }else{
+   return false;
+  }
 }
 
 #include "plasma-translator.moc"
